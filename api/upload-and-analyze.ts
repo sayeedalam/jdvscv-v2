@@ -1,5 +1,5 @@
 // ===============================
-// JDvsCV v2 – FINAL FIXED VERSION (Simplified pdf-parse v2.x usage)
+// JDvsCV v2 – FINAL FIXED VERSION (Simplified pdf-parse v2.1 usage)
 // ===============================
 
 import formidable from "formidable";
