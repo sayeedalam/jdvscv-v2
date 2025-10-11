@@ -1,29 +1,27 @@
 {
     "name": "jdvscv2",
-    "private": true,
     "version": "1.0.0",
+    "private": true,
+    "type": "module",
     "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "preview": "vite preview"
+      "dev": "vite",
+      "build": "vite build",
+      "preview": "vite preview"
     },
     "dependencies": {
-        "@google/genai": "^1.22.0",
-        "@types/formidable": "^3.4.6",
-        "formidable": "^3.5.4",
-        "mammoth": "^1.11.0",
-        "pdf-parse": "^2.2.8",
-        "react": "^19.2.0",
-        "react-circular-progressbar": "^2.2.0",
-        "react-dom": "^19.2.0"
+      "react": "^19.2.0",
+      "react-dom": "^19.2.0",
+      "@google/genai": "^1.22.0",
+      "formidable": "^3.5.2",
+      "mammoth": "^1.8.0",
+      "pdf-parse": "^1.1.1"
     },
     "devDependencies": {
-        "@types/node": "^22.14.0",
-        "@vitejs/plugin-react": "^5.0.0",
-        "autoprefixer": "^10.4.19",
-        "postcss": "^8.4.38",
-        "tailwindcss": "^3.4.13",
-        "typescript": "~5.8.2",
-        "vite": "^6.2.0"
+      "@types/formidable": "^3.4.5",
+      "@types/node": "^22.14.0",
+      "@vitejs/plugin-react": "^5.0.4",
+      "typescript": "~5.8.2",
+      "vite": "^6.3.6"
     }
-}
+  }
+  
