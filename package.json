@@ -1,11 +1,11 @@
 {
     "name": "jdvscv2",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "private": true,
     "type": "module",
     "scripts": {
       "dev": "vite",
-      "build": "vite build",
+      "build": "npx vite build",
       "preview": "vite preview"
     },
     "dependencies": {
