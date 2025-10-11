@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { JDInput } from '../components/JDInput';
-import { FileUploader } from '../components/FileUploader';
-import { ResultViewer } from '../components/ResultViewer';
+import React, { useState } from "react";
+import { JDInput } from "../components/JDInput";
+import { FileUploader } from "../components/FileUploader";
+import { ResultViewer } from "../components/ResultViewer";
 
 export const Home: React.FC = () => {
-  const [jd, setJD] = useState('');
+  const [jd, setJD] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -14,7 +14,7 @@ export const Home: React.FC = () => {
   // -----------------------------
   const handleAnalyze = async () => {
     if (!file || !jd.trim()) {
-      alert('Please provide both a Job Description and a Resume file.');
+      alert("Please provide both a Job Description and a Resume file.");
       return;
     }
 
@@ -23,59 +23,65 @@ export const Home: React.FC = () => {
 
     try {
       // ============================
-      // STEP 1 — Upload Resume
+      // STEP 1 — Upload Resume (Hostinger)
       // ============================
       const formData = new FormData();
-      formData.append('resume', file);
+      formData.append("resume", file);
 
-      const uploadResponse = await fetch('/jdvscv2/uploads/javsresume/resume_upload.php', {
-        method: 'POST',
-        body: formData,
-      });
+      const uploadResponse = await fetch(
+        "https://letsapplai.com/jdvscv2/uploads/javsresume/resume_upload.php",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!uploadResponse.ok)
+        throw new Error(`Upload failed: ${uploadResponse.statusText}`);
 
       const uploadData = await uploadResponse.json();
-
-      if (!uploadResponse.ok || uploadData.status !== 'success') {
-        throw new Error(uploadData.message || 'Resume upload failed.');
-      }
+      if (uploadData.status !== "success")
+        throw new Error(uploadData.message || "Upload failed.");
 
       // ============================
-      // STEP 2 — Extract Text from Resume
+      // STEP 2 — Extract Text (Hostinger)
       // ============================
-      const extractResponse = await fetch('/jdvscv2/uploads/javsresume/extract_text.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: uploadData.filename }),
-      });
+      const extractResponse = await fetch(
+        "https://letsapplai.com/jdvscv2/uploads/javsresume/extract_text.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: uploadData.filename }),
+        }
+      );
+
+      if (!extractResponse.ok)
+        throw new Error(`Extraction failed: ${extractResponse.statusText}`);
 
       const extractData = await extractResponse.json();
-
-      if (!extractResponse.ok || extractData.status !== 'success') {
-        throw new Error(extractData.message || 'Resume text extraction failed.');
-      }
+      if (extractData.status !== "success")
+        throw new Error(extractData.message || "Extraction failed.");
 
       // ============================
-      // STEP 3 — Analyze JD vs Resume (Vercel → Gemini)
+      // STEP 3 — Analyze JD vs CV (Vercel / Gemini)
       // ============================
-      const analyzeResponse = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const analyzeResponse = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           jobDescription: jd,
           resumeText: extractData.text,
         }),
       });
 
+      if (!analyzeResponse.ok)
+        throw new Error(`Analysis failed: ${analyzeResponse.statusText}`);
+
       const analysisResult = await analyzeResponse.json();
-
-      if (!analyzeResponse.ok) {
-        throw new Error(analysisResult.message || 'Analysis failed.');
-      }
-
       setResult(analysisResult);
     } catch (err: any) {
-      console.error('JDvsCV Error:', err);
-      alert('Error: ' + err.message);
+      console.error("JDvsCV Error:", err);
+      alert("Error: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -95,7 +101,11 @@ export const Home: React.FC = () => {
         <JDInput jd={jd} setJD={setJD} />
 
         {/* Resume Uploader */}
-        <FileUploader onFileSelect={setFile} onAnalyze={handleAnalyze} file={file} />
+        <FileUploader
+          onFileSelect={setFile}
+          onAnalyze={handleAnalyze}
+          file={file}
+        />
 
         {/* Loading Indicator */}
         {loading && (
