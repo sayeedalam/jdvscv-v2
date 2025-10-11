@@ -1,12 +1,12 @@
 // ===============================
-// JDvsCV v2 – FINAL FIXED VERSION
+// JDvsCV v2 – FINAL FIXED VERSION (Updated pdf-parse usage)
 // ===============================
 
 import formidable from "formidable";
 import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import mammoth from "mammoth";
-import * as pdf from "pdf-parse"; // ✅ correct import form
+import { PDFParse } from "pdf-parse"; // NEW: Import the modern PDFParse class
 
 export const config = { api: { bodyParser: false } };
 
@@ -18,10 +18,20 @@ async function extractText(filePath: string, mimeType: string): Promise<string> 
 
   if (mimeType.includes("pdf")) {
     const dataBuffer = fs.readFileSync(filePath);
-    const parsed = await (pdf as any).default
-      ? (pdf as any).default(dataBuffer)
-      : (pdf as any)(dataBuffer);
-    return parsed.text;
+    
+    // FIX: Use the modern class-based API to avoid internal dependency issues.
+    let textContent = "";
+    const parser = new PDFParse({ data: dataBuffer });
+    
+    try {
+      const parsed = await parser.getText();
+      textContent = parsed.text;
+    } finally {
+      // Important: Always call destroy() to free resources and prevent memory leaks.
+      await parser.destroy();
+    }
+    
+    return textContent;
   }
 
   if (mimeType.includes("word") || mimeType.includes("officedocument")) {
