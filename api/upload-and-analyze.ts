@@ -1,12 +1,36 @@
 // ===============================
-// JDvsCV v2 – FINAL FIXED VERSION (Updated pdf-parse usage)
+// JDvsCV v2 – FINAL FIXED VERSION (PDF Worker Configuration)
 // ===============================
 
 import formidable from "formidable";
 import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import mammoth from "mammoth";
-import { PDFParse } from "pdf-parse"; // NEW: Import the modern PDFParse class
+import { PDFParse } from "pdf-parse";
+import path from "path"; // Added for path resolution
+import { pathToFileURL } from "url"; // Added for file URL conversion
+
+// --- PDF Worker Configuration ---
+// This explicit setup helps resolve "DOMMatrix is not defined" errors
+// in Vercel/Node.js environments by correctly initializing pdf-parse's dependency (pdfjs-dist).
+try {
+  // 1. Reliably find the path to the pdfjs-dist worker file within node_modules.
+  // Note: Using 'pdfjs-dist/build/pdf.worker.mjs' is crucial for modern versions.
+  // The 'as any' is a workaround for TypeScript not having a full signature for require.resolve.
+  const workerPath = (require.resolve as any)("pdfjs-dist/build/pdf.worker.mjs");
+  
+  // 2. Convert the local file path to a file:// URL, required by the setWorker method.
+  const workerUrl = pathToFileURL(workerPath).href; 
+  
+  // 3. Set the worker globally before any PDFParse instance is created.
+  PDFParse.setWorker(workerUrl);
+  
+} catch (e) {
+  // If this fails (e.g., in a development environment or during a pre-build step), 
+  // we log a warning but proceed, letting the library try its own auto-config.
+  console.warn("PDFParse worker setup failed. Relying on auto-config:", e);
+}
+// --- End Worker Configuration ---
 
 export const config = { api: { bodyParser: false } };
 
@@ -19,7 +43,6 @@ async function extractText(filePath: string, mimeType: string): Promise<string> 
   if (mimeType.includes("pdf")) {
     const dataBuffer = fs.readFileSync(filePath);
     
-    // FIX: Use the modern class-based API to avoid internal dependency issues.
     let textContent = "";
     const parser = new PDFParse({ data: dataBuffer });
     
