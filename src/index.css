@@ -1,0 +1,8 @@
+/* index.css – base styling */
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Inter", sans-serif;
+    background-color: #f9fafb;
+    color: #111827;
+  }
+  
