@@ -6,19 +6,18 @@ import pdf from "pdf-parse";
 
 export const config = {
   api: {
-    bodyParser: false, // formidable handles multipart
+    bodyParser: false,
   },
 };
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Utility: extract text from uploaded resume
 async function extractText(filePath: string, mimeType: string) {
   if (mimeType.includes("pdf")) {
     const dataBuffer = fs.readFileSync(filePath);
     const pdfData = await pdf(dataBuffer);
     return pdfData.text;
-  } else if (mimeType.includes("word")) {
+  } else if (mimeType.includes("word") || mimeType.includes("officedocument")) {
     const buffer = fs.readFileSync(filePath);
     const { value } = await mammoth.extractRawText({ buffer });
     return value;
@@ -33,7 +32,6 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // Parse multipart form (JD + resume)
     const form = new IncomingForm({ keepExtensions: true });
     form.parse(req, async (err, fields, files) => {
       if (err) {
@@ -43,21 +41,19 @@ export default async function handler(req: any, res: any) {
 
       const jobDescription = fields.jobDescription?.[0] || "";
       const file = files.resume?.[0];
-
       if (!file) return res.status(400).json({ message: "No resume uploaded" });
 
       const mimeType = file.mimetype || "";
       const resumeText = await extractText(file.filepath, mimeType);
 
-      // Create prompt for Gemini
       const prompt = `
-Compare the following job description and resume.
-Output a JSON with:
+Compare this job description and resume. 
+Return a JSON with:
 - overall_score (0–100)
-- strengths
-- weaknesses
-- missing_keywords
-- verdict
+- strengths (array)
+- weaknesses (array)
+- missing_keywords (array)
+- verdict (string)
 
 Job Description:
 ${jobDescription}
@@ -72,8 +68,8 @@ ${resumeText}
       });
 
       const raw = response.text().trim();
-      const jsonString = raw.replace(/^```json/, "").replace(/```$/, "");
-      const result = JSON.parse(jsonString);
+      const jsonText = raw.replace(/^```json/, "").replace(/```$/, "");
+      const result = JSON.parse(jsonText);
 
       return res.status(200).json(result);
     });
