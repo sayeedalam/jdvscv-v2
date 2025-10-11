@@ -22,63 +22,23 @@ export const Home: React.FC = () => {
     setResult(null);
 
     try {
-      // ============================
-      // STEP 1 — Upload Resume (Hostinger)
-      // ============================
+      // Prepare multipart form data for upload + JD text
       const formData = new FormData();
       formData.append("resume", file);
+      formData.append("jobDescription", jd);
 
-      const uploadResponse = await fetch(
-        "https://letsapplai.com/jdvscv2/uploads/javsresume/resume_upload.php",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (!uploadResponse.ok)
-        throw new Error(`Upload failed: ${uploadResponse.statusText}`);
-
-      const uploadData = await uploadResponse.json();
-      if (uploadData.status !== "success")
-        throw new Error(uploadData.message || "Upload failed.");
-
-      // ============================
-      // STEP 2 — Extract Text (Hostinger)
-      // ============================
-      const extractResponse = await fetch(
-        "https://letsapplai.com/jdvscv2/uploads/javsresume/extract_text.php",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filename: uploadData.filename }),
-        }
-      );
-
-      if (!extractResponse.ok)
-        throw new Error(`Extraction failed: ${extractResponse.statusText}`);
-
-      const extractData = await extractResponse.json();
-      if (extractData.status !== "success")
-        throw new Error(extractData.message || "Extraction failed.");
-
-      // ============================
-      // STEP 3 — Analyze JD vs CV (Vercel / Gemini)
-      // ============================
-      const analyzeResponse = await fetch("/api/analyze", {
+      // Single API call to unified backend route
+      const response = await fetch("/api/upload-and-analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jobDescription: jd,
-          resumeText: extractData.text,
-        }),
+        body: formData,
       });
 
-      if (!analyzeResponse.ok)
-        throw new Error(`Analysis failed: ${analyzeResponse.statusText}`);
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status} ${response.statusText}`);
+      }
 
-      const analysisResult = await analyzeResponse.json();
-      setResult(analysisResult);
+      const data = await response.json();
+      setResult(data);
     } catch (err: any) {
       console.error("JDvsCV Error:", err);
       alert("Error: " + err.message);
@@ -92,15 +52,17 @@ export const Home: React.FC = () => {
   // -----------------------------
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900">
+      {/* Header */}
       <header className="bg-blue-600 text-white py-4 text-center font-bold text-xl shadow-md">
         JD vs CV Analyzer v2
       </header>
 
+      {/* Main Body */}
       <main className="max-w-3xl mx-auto mt-10 px-4 pb-16">
         {/* Job Description Input */}
         <JDInput jd={jd} setJD={setJD} />
 
-        {/* Resume Uploader */}
+        {/* File Uploader */}
         <FileUploader
           onFileSelect={setFile}
           onAnalyze={handleAnalyze}
@@ -110,14 +72,15 @@ export const Home: React.FC = () => {
         {/* Loading Indicator */}
         {loading && (
           <div className="text-center text-blue-600 mt-4 font-semibold">
-            ⏳ Analyzing your resume against the job description...
+            ⏳ Uploading and analyzing your resume...
           </div>
         )}
 
-        {/* Results */}
+        {/* Results Viewer */}
         <ResultViewer result={result} />
       </main>
 
+      {/* Footer */}
       <footer className="bg-gray-800 text-gray-300 text-center py-4 text-sm">
         © 2025 LibraTech Systems · LetsApplAI JDvsCV v2
       </footer>
