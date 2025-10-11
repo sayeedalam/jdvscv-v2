@@ -1,8 +1,9 @@
-import { IncomingForm } from "formidable";
+// /api/upload-and-analyze.ts
+import formidable, { IncomingForm } from "formidable";
 import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import mammoth from "mammoth";
-import pdf from "pdf-parse";
+import pdfParse from "pdf-parse";
 
 export const config = {
   api: {
@@ -12,10 +13,11 @@ export const config = {
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+// Extract text from uploaded resume
 async function extractText(filePath: string, mimeType: string) {
   if (mimeType.includes("pdf")) {
     const dataBuffer = fs.readFileSync(filePath);
-    const pdfData = await pdf(dataBuffer);
+    const pdfData = await pdfParse(dataBuffer);
     return pdfData.text;
   } else if (mimeType.includes("word") || mimeType.includes("officedocument")) {
     const buffer = fs.readFileSync(filePath);
@@ -48,7 +50,7 @@ export default async function handler(req: any, res: any) {
 
       const prompt = `
 Compare this job description and resume. 
-Return a JSON with:
+Return JSON with:
 - overall_score (0–100)
 - strengths (array)
 - weaknesses (array)
@@ -67,7 +69,8 @@ ${resumeText}
         contents: prompt,
       });
 
-      const raw = response.text().trim();
+      // Gemini SDK uses a getter: .text, not .text()
+      const raw = response.text.trim();
       const jsonText = raw.replace(/^```json/, "").replace(/```$/, "");
       const result = JSON.parse(jsonText);
 
