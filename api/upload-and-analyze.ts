@@ -1,12 +1,12 @@
 // ===============================
-// JDvsCV v2 – FINAL FIXED VERSION 1.6 (Resilient pdf-parse Import)
+// JDvsCV v2 – FINAL FIXED VERSION (Resilient pdf-parse Import)
 // ===============================
 
 import formidable from "formidable";
 import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import mammoth from "mammoth";
-// FIX: Use namespace import instead of default import to fix the "no export named 'default'" error.
+// FIX: Use namespace import instead of default import to fix the TS1192 error.
 import * as pdf from "pdf-parse"; 
 
 export const config = { api: { bodyParser: false } };
@@ -20,10 +20,10 @@ async function extractText(filePath: string, mimeType: string): Promise<string> 
   if (mimeType.includes("pdf")) {
     const dataBuffer = fs.readFileSync(filePath);
     
-    // FIX: This resilient call pattern (checking for .default) handles 
-    // mixed CJS/ESM environments like Vercel/TypeScript correctly.
+    // FIX: This pattern safely retrieves the parser function whether it's the 
+    // default export (.default) or the main module export (pdf).
     const parserFunction = (pdf as any).default || pdf;
-    const parsed = await parserFunction(dataBuffer);
+    const parsed = await parserFunction(dataBuffer); 
     
     return parsed.text;
   }
